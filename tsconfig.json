@@ -4,7 +4,8 @@
         "target": "es6",
         "sourceMap": true,
         "removeComments": true,
-        "jsx": "react"
+        "jsx": "react",
+        "lib": ["es5","es6","dom"]
     },
     "exclude": [
         "node_modules"

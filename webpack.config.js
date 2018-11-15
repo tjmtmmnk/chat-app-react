@@ -30,6 +30,6 @@ module.exports = [{
             path.join(__dirname, 'src'),
             'node_modules'
         ],
-        extensions: ['.ts', '.tsx', '.js'],
+        extensions: [ '.ts', '.tsx', ".js", ".json"]
     },
 }];

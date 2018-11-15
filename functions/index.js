@@ -16,7 +16,7 @@ function createChannel(cname) {
     date2.setSeconds(date2.getSeconds() + 1);
 
     const default_data = `{
-        "message" : {
+        "messages" : {
             "1" : {
             "body" : "Welcome to #${cname} channel!",
             "date" : "${date1.toJSON()}",
@@ -56,10 +56,10 @@ app.post('/channels/:cname/messages', (req, res) => {
         body: req.body.body,
         user: req.user
     };
-    let message_ref = admin.database().ref(`channels/${cname}/messages`);
-    message_ref.push(message);
+    let messagesRef = admin.database().ref(`channels/${cname}/messages`);
+    messagesRef.push(message);
     res.header('Content-Type', 'application/json; charset=utf-8');
-    res.status(201).send({result: 'ok'});
+    res.status(201).send({result: "ok"});
 });
 
 // チャンネル一覧取得
