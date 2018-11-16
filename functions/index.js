@@ -1,46 +1,74 @@
 const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-const express = require('express');
-const cors = require('cors')({origin: true});
 
+const admin = require('firebase-admin');
 admin.initializeApp(functions.config().firebase);
+
+const express = require('express');
 const app = express();
+
+const cors = require('cors')({origin: true});
 app.use(cors);
 
-exports.v1 = functions.https.onRequest(app);
+const anonymousUser = {
+    id: "anon",
+    name: "Anonymous",
+    avatar: ""
+};
+
+const checkUser = (req, res, next) => {
+    req.user = anonymousUser;
+    if (req.query.auth_token !== undefined) {
+        let idToken = req.query.auth_token;
+        admin.auth().verifyIdToken(idToken)
+            .then(decodedIdToken => {
+                let authUser = {
+                    id: decodedIdToken.user_id,
+                    name: decodedIdToken.name,
+                    avatar: decodedIdToken.picture
+                };
+                req.user = authUser;
+                return next();
+            })
+            .catch(error => {
+                return next();
+            });
+    } else {
+        return next();
+    }
+};
+
+app.use(checkUser);
 
 function createChannel(cname) {
-    let channles_ref = admin.database().ref('channels');
+    let channelsRef = admin.database().ref('channels');
     let date1 = new Date();
     let date2 = new Date();
     date2.setSeconds(date2.getSeconds() + 1);
-
-    const default_data = `{
+    const defaultData = `{
         "messages" : {
             "1" : {
-            "body" : "Welcome to #${cname} channel!",
-            "date" : "${date1.toJSON()}",
-            "user" : {
-                "avatar" : "",
-                "id" : "robot",
-                "name" : "Robot"
+                "body" : "Welcome to #${cname} channel!",
+                "date" : "${date1.toJSON()}",
+                "user" : {
+                    "avatar" : "",
+                    "id" : "robot",
+                    "name" : "Robot"
                 }
             },
             "2" : {
-            "body" : "Let's post first message!",
-            "date" : "${date2.toJSON()}",
-            "user" : {
-                "avatar" : "",
-                "id" : "robot",
-                "name" : "Robot"
+                "body" : "はじめてのメッセージを投稿してみましょう。",
+                "date" : "${date2.toJSON()}",
+                "user" : {
+                    "avatar" : "",
+                    "id" : "robot",
+                    "name" : "Robot"
                 }
             }
         }
     }`;
-    channles_ref.child(cname).set((JSON.parse(default_data)));
+    channelsRef.child(cname).set(JSON.parse(defaultData));
 }
 
-// チャンネル作成
 app.post('/channels', (req, res) => {
     let cname = req.body.cname;
     createChannel(cname);
@@ -48,7 +76,19 @@ app.post('/channels', (req, res) => {
     res.status(201).json({result: 'ok'});
 });
 
-//メッセージ作成
+app.get('/channels', (req, res) => {
+    let channelsRef = admin.database().ref('channels');
+    channelsRef.once('value', function (snapshot) {
+        let items = new Array();
+        snapshot.forEach(function (childSnapshot) {
+            let cname = childSnapshot.key;
+            items.push(cname);
+        });
+        res.header('Content-Type', 'application/json; charset=utf-8');
+        res.send({channels: items});
+    });
+});
+
 app.post('/channels/:cname/messages', (req, res) => {
     let cname = req.params.cname;
     let message = {
@@ -62,25 +102,10 @@ app.post('/channels/:cname/messages', (req, res) => {
     res.status(201).send({result: "ok"});
 });
 
-// チャンネル一覧取得
-app.get('/channels', (req, res) => {
-    let channel_ref = admin.database().ref('channels');
-    channel_ref.once('value', function (snapshot) {
-        let items = new Array();
-        snapshot.forEach(function (childSnapshot) {
-            let cname = childSnapshot.key;
-            items.push(cname);
-        });
-        res.header('Content-Type', 'application/json; charset=utf-8');
-        res.send({channels: items});
-    });
-});
-
-// 日付順に最後からMAX20件のメッセージを取得
 app.get('/channels/:cname/messages', (req, res) => {
     let cname = req.params.cname;
-    let message_ref = admin.database().ref(`channels/${cname}/messages`).orderByChild('date').limitToLast(20);
-    message_ref.once('value', function (snapshot) {
+    let messagesRef = admin.database().ref(`channels/${cname}/messages`).orderByChild('date').limitToLast(20);
+    messagesRef.once('value', function (snapshot) {
         let items = new Array();
         snapshot.forEach(function (childSnapshot) {
             let message = childSnapshot.val();
@@ -93,10 +118,11 @@ app.get('/channels/:cname/messages', (req, res) => {
     });
 });
 
-//初期状態に戻す
 app.post('/reset', (req, res) => {
     createChannel('general');
     createChannel('random');
     res.header('Content-Type', 'application/json; charset=utf-8');
     res.status(201).send({result: "ok"});
 });
+
+exports.v1 = functions.https.onRequest(app);
