@@ -6,6 +6,8 @@ import {render} from 'react-dom';
 
 interface MessageFeedProps { //このComponentのpropsに関する定義
     channelName: string;
+    shouldReload: boolean;
+    setShouldReload: (shouldReload: boolean) => void;
 }
 
 interface MessageFeedState { //このComponentが管理するstateに関する定義
@@ -43,6 +45,7 @@ export class MessageFeed extends React.Component<MessageFeedProps, MessageFeedSt
     }
 
     private fetchMessages = (channelName: string) => {
+        this.props.setShouldReload(false); //reload通知が来たことを知らせるために状態を変える
         fetchMessages(channelName)
             .then(response => {
                 this.setState({messages: response.data.messages});
@@ -57,11 +60,11 @@ export class MessageFeed extends React.Component<MessageFeedProps, MessageFeedSt
         this.fetchMessages(this.props.channelName);
     }
 
-    //チャンネル名が変わった時に新たにメッセージを取得する
+    //チャンネル名が変わった時またはreload通知が来たときに新たにメッセージを取得する
     public componentDidUpdate(prevProps: MessageFeedProps) {
-        if (prevProps.channelName !== this.props.channelName) {
+        if ((prevProps.channelName !== this.props.channelName) || (!prevProps.shouldReload && this.props.shouldReload)) {
             this.fetchMessages(this.props.channelName);
         }
     }
-}
 
+}

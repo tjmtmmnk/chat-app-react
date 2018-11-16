@@ -10,8 +10,8 @@ exports.ChannelList = () => {
             "Home",
             React.createElement(semantic_ui_react_1.Icon, { name: 'home' })),
         React.createElement(semantic_ui_react_1.Menu.Item, null,
-            "Channels",
-            React.createElement(semantic_ui_react_1.Icon, { name: 'list' },
-                React.createElement(semantic_ui_react_1.Menu.Menu, null, channels.map(channel => React.createElement(semantic_ui_react_1.Menu.Item, { key: channel, name: channel, as: react_router_dom_1.NavLink, to: { pathname: `/channels/${channel}` } }, channel)))))));
+            "Channel",
+            React.createElement(semantic_ui_react_1.Icon, { name: 'list' }),
+            React.createElement(semantic_ui_react_1.Menu.Menu, null, channels.map(channel => React.createElement(semantic_ui_react_1.Menu.Item, { key: channel, name: channel, as: react_router_dom_1.NavLink, to: `/channels/${channel}` }, channel))))));
 };
 //# sourceMappingURL=ChannelList.js.map
