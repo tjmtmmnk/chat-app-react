@@ -3,3 +3,8 @@ functions/node_modules
 cloud-functions-emulator.log
 .firebaserc
 .eslintrc.json
+node_modules/.bin
+node_modules/@types
+node_modules/acorn
+node_modules/acorn-dynamic-import
+node_modules
