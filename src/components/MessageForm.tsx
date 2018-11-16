@@ -4,6 +4,7 @@ import {Button, Form, Segment, TextArea} from 'semantic-ui-react';
 
 interface MesssageFormProps {
     channelName: string;
+    setShouldReload: (shouldReload: boolean) => void;
 }
 
 interface MessageFormState {
@@ -46,11 +47,16 @@ export class MessageForm extends React.Component<MesssageFormProps, MessageFormS
         event.preventDefault();
         const payload = {
             body: this.state.body,
+            user: {
+                id : '123',
+                name : 'nyan'
+            }
         } as Message;
 
         postMessage(this.props.channelName, payload)
             .then(() => {
                 this.setState({body: ''});
+                this.props.setShouldReload(true); //メッセージ投稿時にリロード通知をpropsを通じてMessageFeedに伝える
             })
             .catch(err => {
                 console.log(err);
